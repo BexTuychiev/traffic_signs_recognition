@@ -5,9 +5,6 @@ from pathlib import Path
 from tqdm import tqdm
 import warnings
 
-
-warnings.filterwarnings("ignore")
-
 DATA_DIR = Path("data")
 train_dir = DATA_DIR / "raw" / "train"
 
