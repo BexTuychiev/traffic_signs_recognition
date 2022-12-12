@@ -4,7 +4,7 @@ from skimage.transform import resize
 from pathlib import Path
 from tqdm import tqdm
 import warnings
-import numpy as np
+
 
 warnings.filterwarnings("ignore")
 
