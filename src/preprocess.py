@@ -16,7 +16,7 @@ def resize_image(image_path, target_size):
     """
     Resize image to target size.
     """
-    image = imread(image_path)
+    image = imread(image_path) / 255.0
     image = resize(image, target_size, anti_aliasing=True)
 
     # Create the path to the image in the prepared directory
