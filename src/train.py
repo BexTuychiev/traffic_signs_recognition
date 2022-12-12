@@ -20,7 +20,7 @@ data_gen = tf.keras.preprocessing.image.ImageDataGenerator(
 # Generate training data from the train directory
 train_generator = data_gen.flow_from_directory(
     data_dir / "raw" / "train",  # Target directory
-    target_size=(150, 150),  # Resize images to 150x150
+    target_size=(50, 50),  # Resize images to 150x150
     batch_size=64,  # Set batch size
     class_mode="categorical",  # Use categorical labels
 )
@@ -32,7 +32,7 @@ def get_model():
     model = tf.keras.models.Sequential(
         [
             tf.keras.layers.Conv2D(32, (3, 3), activation="relu",
-                                   input_shape=(150, 150, 3)),
+                                   input_shape=(50, 50, 3)),
             tf.keras.layers.MaxPooling2D(2, 2),
             tf.keras.layers.Conv2D(64, (3, 3), activation="relu"),
             tf.keras.layers.MaxPooling2D(2, 2),
