@@ -1,12 +1,24 @@
 from joblib import Parallel, delayed
 from skimage.io import imread, imsave
 from skimage.transform import resize
+from skimage.restoration import denoise_tv_chambolle
 from pathlib import Path
 from tqdm import tqdm
-import warnings
 
 DATA_DIR = Path("data")
 train_dir = DATA_DIR / "raw" / "train"
+
+
+def save_image(image_array, image_path):
+    """
+    Save an image given as NumPy array using its current path
+    to create its target_path
+    """
+    # Create the path to the image in the prepared directory
+    target_path = str(image_path).replace("raw", "prepared")
+    Path(target_path).parent.mkdir(parents=True, exist_ok=True)
+
+    imsave(target_path, image_array)
 
 
 def resize_image(image_path, target_size):
@@ -16,11 +28,7 @@ def resize_image(image_path, target_size):
     image = imread(image_path) / 255.0
     image = resize(image, target_size, anti_aliasing=True)
 
-    # Create the path to the image in the prepared directory
-    target_path = str(image_path).replace("raw", "prepared")
-    Path(target_path).parent.mkdir(parents=True, exist_ok=True)
-
-    imsave(target_path, image, )
+    save_image(image, image_path)
 
 
 if __name__ == "__main__":
