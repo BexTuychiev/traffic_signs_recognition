@@ -31,12 +31,23 @@ def resize_image(image_path, target_size):
     save_image(image, image_path)
 
 
+def denoise_image(image_path, weight):
+    """
+    Denoise image using total variation filter.
+    """
+    image = imread(image_path) / 255.0
+    image = denoise_tv_chambolle(image, weight=weight, multichannel=True)
+
+    save_image(image, image_path)
+
+
 if __name__ == "__main__":
     image_paths = []
+    denoise_weight = 0.2
 
     for directory in train_dir.iterdir():
         image_paths.extend(list(directory.glob("*.png")))
 
     Parallel(n_jobs=10, backend="multiprocessing")(
-        delayed(resize_image)(path, (150, 150)) for path in tqdm(image_paths)
+        delayed(denoise_image)(path, denoise_weight) for path in tqdm(image_paths)
     )
