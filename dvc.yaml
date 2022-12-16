@@ -4,7 +4,5 @@ stages:
     deps:
     - data/raw
     - src/preprocess.py
-    params:
-    - preprocess.denoise_weight
     outs:
     - data/prepared
