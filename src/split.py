@@ -15,6 +15,5 @@ for directory in raw_train_dir.iterdir():
         # Create the destination path for the image
         validation_path = str(image_path).replace("train", "validation")
         Path(validation_path).mkdir(parents=True, exist_ok=True)
-        print(validation_path)
         # Move the image to the new path
         shutil.move(image_path, validation_path)
