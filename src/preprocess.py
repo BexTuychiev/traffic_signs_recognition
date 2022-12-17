@@ -4,9 +4,11 @@ from skimage.transform import resize
 from skimage.restoration import denoise_tv_chambolle
 from pathlib import Path
 from tqdm import tqdm
+import yaml
 
 DATA_DIR = Path("data")
 train_dir = DATA_DIR / "raw" / "train"
+validation_dir = DATA_DIR / "raw" / "validation"
 
 
 def save_image(image_array, image_path):
@@ -43,9 +45,11 @@ def denoise_image(image_path, weight):
 
 if __name__ == "__main__":
     image_paths = []
-    denoise_weight = 0.2
+    params = yaml.safe_load(open("params.yaml"))["preprocess"]
+    denoise_weight = params['denoise_weight']
 
-    for directory in train_dir.iterdir():
+    for directory in list(train_dir.iterdir()) + \
+                     list(validation_dir.iterdir()):
         image_paths.extend(list(directory.glob("*.png")))
 
     Parallel(n_jobs=10, backend="multiprocessing")(
