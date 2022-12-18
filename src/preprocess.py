@@ -1,12 +1,26 @@
 from joblib import Parallel, delayed
 from skimage.io import imread, imsave
 from skimage.transform import resize
+from skimage.restoration import denoise_tv_chambolle
 from pathlib import Path
 from tqdm import tqdm
-import warnings
+import yaml
 
 DATA_DIR = Path("data")
 train_dir = DATA_DIR / "raw" / "train"
+validation_dir = DATA_DIR / "raw" / "validation"
+
+
+def save_image(image_array, image_path):
+    """
+    Save an image given as NumPy array using its current path
+    to create its target_path
+    """
+    # Create the path to the image in the prepared directory
+    target_path = str(image_path).replace("raw", "prepared")
+    Path(target_path).parent.mkdir(parents=True, exist_ok=True)
+
+    imsave(target_path, image_array)
 
 
 def resize_image(image_path, target_size):
@@ -16,19 +30,28 @@ def resize_image(image_path, target_size):
     image = imread(image_path) / 255.0
     image = resize(image, target_size, anti_aliasing=True)
 
-    # Create the path to the image in the prepared directory
-    target_path = str(image_path).replace("raw", "prepared")
-    Path(target_path).parent.mkdir(parents=True, exist_ok=True)
+    save_image(image, image_path)
 
-    imsave(target_path, image, )
+
+def denoise_image(image_path, weight):
+    """
+    Denoise image using total variation filter.
+    """
+    image = imread(image_path) / 255.0
+    image = denoise_tv_chambolle(image, weight=weight, multichannel=True)
+
+    save_image(image, image_path)
 
 
 if __name__ == "__main__":
     image_paths = []
+    params = yaml.safe_load(open("params.yaml"))["preprocess"]
+    denoise_weight = params['denoise_weight']
 
-    for directory in train_dir.iterdir():
+    for directory in list(train_dir.iterdir()) + \
+                     list(validation_dir.iterdir()):
         image_paths.extend(list(directory.glob("*.png")))
 
     Parallel(n_jobs=10, backend="multiprocessing")(
-        delayed(resize_image)(path, (150, 150)) for path in tqdm(image_paths)
+        delayed(denoise_image)(path, denoise_weight) for path in tqdm(image_paths)
     )
