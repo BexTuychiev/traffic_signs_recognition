@@ -1,11 +1,11 @@
 from pathlib import Path
-
 import tensorflow as tf
-from joblib import dump
+import yaml
 
 # Set the paths to the train and validation directories
 base_dir = Path(__file__).parent.parent
 data_dir = base_dir / "data"
+params = yaml.safe_load(open("params.yaml"))["train"]
 
 # Create an ImageDataGenerator object for the train set
 data_gen = tf.keras.preprocessing.image.ImageDataGenerator(
@@ -19,9 +19,16 @@ data_gen = tf.keras.preprocessing.image.ImageDataGenerator(
 
 # Generate training data from the train directory
 train_generator = data_gen.flow_from_directory(
-    data_dir / "raw" / "train",  # Target directory
-    target_size=(50, 50),  # Resize images to 150x150
-    batch_size=64,  # Set batch size
+    data_dir / "prepared" / "train",  # Target directory
+    target_size=(params['image_width'], params['image_height']),  # Resize images
+    batch_size=params['batch_size'],  # Set batch size
+    class_mode="categorical",  # Use categorical labels
+)
+
+validation_generator = data_gen.flow_from_directory(
+    data_dir / "prepared" / "validation",  # Target directory
+    target_size=(params['image_width'], params['image_height']),  # Resize images
+    batch_size=params['batch_size'],  # Set batch size
     class_mode="categorical",  # Use categorical labels
 )
 
@@ -31,11 +38,18 @@ def get_model():
     # Define a CNN model
     model = tf.keras.models.Sequential(
         [
-            tf.keras.layers.Conv2D(32, (3, 3), activation="relu",
-                                   input_shape=(50, 50, 3)),
+            tf.keras.layers.Conv2D(filters=32, kernel_size=3, activation="relu",
+                                   input_shape=(
+                                       params['image_width'], params['image_height'], 3)),
             tf.keras.layers.MaxPooling2D(2, 2),
-            tf.keras.layers.Conv2D(64, (3, 3), activation="relu"),
+            tf.keras.layers.Conv2D(filters=64, kernel_size=3, activation="relu"),
             tf.keras.layers.MaxPooling2D(2, 2),
+            # tf.keras.layers.Dropout(0.2),
+            # tf.keras.layers.Conv2D(filters=128, kernel_size=3, activation="relu"),
+            # tf.keras.layers.MaxPooling2D(2, 2),
+            # tf.keras.layers.Dropout(0.2),
+            # tf.keras.layers.Conv2D(filters=256, kernel_size=3, activation="relu"),
+            # tf.keras.layers.MaxPooling2D(2, 2),
             tf.keras.layers.Flatten(),
             tf.keras.layers.Dropout(0.5),
             tf.keras.layers.Dense(512, activation="relu"),
@@ -47,9 +61,8 @@ def get_model():
     model.compile(
         # Use categorical cross-entropy loss
         loss=tf.keras.losses.categorical_crossentropy,
-        optimizer=tf.keras.optimizers.Adam(),  # Use Adam optimizer
+        optimizer=tf.keras.optimizers.Adam(learning_rate=params['learning_rate']),
         metrics=["accuracy"],  # Calculate accuracy
-
     )
 
     return model
@@ -58,21 +71,23 @@ def get_model():
 def main():
     # Get the model
     model = get_model()
+    # Create a path to save the model
+    model_path = base_dir / "models"
+    model_path.mkdir(parents=True, exist_ok=True)
 
+    # Define callbacks
+    callbacks = [tf.keras.callbacks.ModelCheckpoint(model_path / "model.keras",
+                                                    monitor="val_accuracy",
+                                                    save_best_only=True),
+                 tf.keras.callbacks.EarlyStopping(monitor="val_accuracy", patience=5)]
     # Fit the model
     history = model.fit(
-        train_generator,  # Use the train generator
-        steps_per_epoch=100,
-        epochs=10,  # Train for 10 epochs
+        train_generator,
+        steps_per_epoch=len(train_generator),
+        epochs=params['n_epochs'],
+        validation_data=validation_generator,
+        callbacks=callbacks,
     )
-
-    metrics_dir = base_dir / "metrics"
-    models_dir = base_dir / "models"
-    metrics_dir.mkdir(exist_ok=True)
-    models_dir.mkdir(exist_ok=True)
-
-    dump(history.history, metrics_dir / "history.joblib")
-    dump(model, models_dir / "model.joblib")
 
 
 if __name__ == "__main__":
