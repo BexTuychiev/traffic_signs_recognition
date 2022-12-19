@@ -1,6 +1,7 @@
 from pathlib import Path
 import tensorflow as tf
 from dvc.api import params_show
+import pandas as pd
 
 # Set the paths to the train and validation directories
 BASE_DIR = Path(__file__).parent.parent
@@ -67,7 +68,7 @@ def get_model():
     model.compile(
         loss=tf.keras.losses.categorical_crossentropy,
         optimizer=tf.keras.optimizers.Adam(),
-        metrics=["accuracy"],
+        metrics=["accuracy", tf.keras.metrics.Precision(), tf.keras.metrics.Recall()],
     )
 
     return model
@@ -97,6 +98,8 @@ def main():
         callbacks=callbacks,
     )
 
+    # Save the metrics
+    pd.DataFrame(history.history).to_csv("metrics.csv", index=False)
 
 if __name__ == "__main__":
     main()

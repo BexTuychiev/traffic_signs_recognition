@@ -24,6 +24,4 @@ stages:
     - train
     outs:
     - models
-    metrics:
-    - metrics.csv:
-        cache: false
+    - metrics.csv

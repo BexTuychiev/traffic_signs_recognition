@@ -41,21 +41,21 @@ stages:
       size: 139748007
       nfiles: 39209
     - path: src/train.py
-      md5: f2b4aacb08d199fd6472bd237b753feb
-      size: 3268
+      md5: 86d5fcafd837d93f88f15b61c44ec119
+      size: 3440
     params:
       params.yaml:
         train:
           image_width: 30
           image_height: 30
-          batch_size: 64
+          batch_size: 32
           learning_rate: 0.1
           n_epochs: 5
     outs:
     - path: metrics.csv
-      md5: 17c6c09a1d576e74275e22c89af165c0
-      size: 438
+      md5: 1b6b25c038f22110de04bda8c8c8c0b3
+      size: 828
     - path: models
-      md5: c46100621bea9318b56a8793c244f752.dir
+      md5: 4b3696d122fa7fc2ce0a90a5017c8849.dir
       size: 14126544
       nfiles: 1
